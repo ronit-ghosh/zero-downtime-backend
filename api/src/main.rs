@@ -1,38 +1,24 @@
-use poem::{
-    Route, Server, get, handler,
-    listener::TcpListener,
-    post,
-    web::{Json, Path},
-};
-// use store::store::Store;
-use crate::types::{req_input::CreateWebsiteInputs, req_output::CreateWebsiteOutputs};
+use poem::{EndpointExt, Route, Server, listener::TcpListener, post};
+use std::sync::{Arc, Mutex};
+use store::store::Store;
 
+use crate::routes::user::{signin, signup};
+
+pub mod routes;
 pub mod types;
 
-#[handler]
-fn get_website(Path(name): Path<String>) -> String {
-    format!("hello: {name}")
-}
-
-#[handler]
-fn create_website(Json(data): Json<CreateWebsiteInputs>) -> Json<CreateWebsiteOutputs> {
-    let url = data.url;
-    // let s = Store::default().unwrap();
-    println!("{}", url);
-    let response = CreateWebsiteOutputs {
-        id: String::from("1"),
-    };
-    Json(response)
-}
-
-#[tokio::main]
+#[tokio::main()]
 async fn main() -> Result<(), std::io::Error> {
-    let app = Route::new()
-        .at("/get/website/:name", get(get_website))
-        .at("/create/website", post(create_website));
+    let s = Store::new().unwrap_or_else(|_| panic!("Error connecting to the database!"));
+    let store = Arc::new(Mutex::new(s));
 
-    Server::new(TcpListener::bind("0.0.0.0:3000"))
-        .name("hello-world")
+    let app = Route::new()
+        .at("/api/user/signup", post(signup))
+        .at("/api/user/signin", post(signin))
+        .data(store);
+
+    Server::new(TcpListener::bind("0.0.0.0:8000"))
+        .name("zero-downtime")
         .run(app)
         .await
 }

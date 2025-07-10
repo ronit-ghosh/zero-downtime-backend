@@ -2,6 +2,11 @@ use serde::{Deserialize, Serialize};
 
 
 #[derive(Serialize, Deserialize)]
-pub struct CreateWebsiteOutputs {
-  pub id: String
+pub struct SignupOutput {
+  pub jwt: String
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SigninOutput {
+  pub jwt: String
 }
